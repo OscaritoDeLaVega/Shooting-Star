@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shooting Game</title>
+    <style>
+        body { text-align: center; font-family: Arial, sans-serif; }
+        canvas { background: #f4f4f4; display: block; margin: 0 auto; }
+        #score { font-size: 24px; margin-top: 10px; }
+        #secret-code { font-size: 32px; font-weight: bold; color: red; margin-top: 20px; display: none; }
+    </style>
+</head>
+<body>
+
+<canvas id="gameCanvas" width="800" height="600"></canvas>
+<p id="score">Score: 0</p>
+<p id="secret-code">TATANA</p>
+
+<script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    let score = 0;
+    let secretCodeShown = false;
+    const targets = [];
+    const bullets = [];
+    
+    // Player properties
+    const player = { x: 370, y: 550, width: 60, height: 60, color: "blue" };
+
+    // Bullet properties
+    const bulletSpeed = 5;
+
+    // Target properties
+    const targetSpeed = 1;
+
+    // Create a target
+    function createTarget() {
+        const target = {
+            x: Math.random() * (canvas.width - 30),
+            y: 0,
+            width: 30,
+            height: 30,
+            color: "green",
+            speed: targetSpeed + Math.random() * 2 // Varying speeds
+        };
+        targets.push(target);
+    }
+
+    // Update targets position
+    function updateTargets() {
+        targets.forEach(target => {
+            target.y += target.speed;
+            if (target.y > canvas.height) {
+                targets.splice(targets.indexOf(target), 1); // Remove target if it reaches the bottom
+            }
+        });
+    }
+
+    // Draw player
+    function drawPlayer() {
+        ctx.fillStyle = player.color;
+        ctx.fillRect(player.x, player.y, player.width, player.height);
+    }
+
+    // Draw targets
+    function drawTargets() {
+        targets.forEach(target => {
+            ctx.fillStyle = target.color;
+            ctx.fillRect(target.x, target.y, target.width, target.height);
+        });
+    }
+
+    // Create bullet
+    function createBullet() {
+        const bullet = { x: player.x + player.width / 2 - 2, y: player.y, width: 4, height: 10, color: "red" };
+        bullets.push(bullet);
+    }
+
+    // Update bullet position
+    function updateBullets() {
+        bullets.forEach(bullet => {
+            bullet.y -= bulletSpeed;
+            if (bullet.y < 0) bullets.splice(bullets.indexOf(bullet), 1); // Remove bullet when out of bounds
+        });
+    }
+
+    // Draw bullets
+    function drawBullets() {
+        bullets.forEach(bullet => {
+            ctx.fillStyle = bullet.color;
+            ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
+        });
+    }
+
+    // Check for collisions between bullets and targets
+    function checkCollisions() {
+        bullets.forEach(bullet => {
+            targets.forEach(target => {
+                if (bullet.x < target.x + target.width &&
+                    bullet.x + bullet.width > target.x &&
+                    bullet.y < target.y + target.height &&
+                    bullet.y + bullet.height > target.y) {
+                    // Collision detected
+                    score++;
+                    targets.splice(targets.indexOf(target), 1); // Remove target
+                    bullets.splice(bullets.indexOf(bullet), 1); // Remove bullet
+                }
+            });
+        });
+    }
+
+    // Display score and secret code if score is 10
+    function displayScore() {
+        document.getElementById("score").textContent = `Score: ${score}`;
+        if (score >= 10 && !secretCodeShown) {
+            document.getElementById("secret-code").style.display = "block";
+            secretCodeShown = true;
+        }
+    }
+
+    // Game loop
+    function gameLoop() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas
+
+        updateTargets();
+        updateBullets();
+        checkCollisions();
+
+        drawPlayer();
+        drawTargets();
+        drawBullets();
+        displayScore();
+
+        requestAnimationFrame(gameLoop);
+    }
+
+    // Keyboard controls
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "ArrowLeft" && player.x > 0) player.x -= 20;
+        if (e.key === "ArrowRight" && player.x < canvas.width - player.width) player.x += 20;
+        if (e.key === " ") createBullet(); // Shoot on spacebar
+    });
+
+    // Create targets at random intervals
+    setInterval(createTarget, 1000);
+
+    // Start the game loop
+    gameLoop();
+</script>
+
+</body>
+</html>
